@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Popkhana Ledger — Flavoured Makhana Cost-to-Price (£)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#3E2A1E;
+    --ink-soft:#5C4630;
+    --gold:#D4972C;
+    --gold-deep:#B97D1A;
+    --cream:#F7F0E3;
+    --paper:#FBF7EE;
+    --rule:#D9CBB0;
+    --cost:#A8442F;
+    --profit:#5C7A4A;
+    --shadow: 0 2px 0 rgba(62,42,30,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    padding:32px 16px 64px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  .ledger-head{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:28px;
+    flex-wrap:wrap;gap:8px;
+  }
+  .ledger-head h1{
+    font-family:'Fraunces',serif;font-weight:700;font-size:clamp(26px,5vw,38px);
+    margin:0;letter-spacing:-0.01em;
+  }
+  .ledger-head .tag{font-size:13px;color:var(--ink-soft);font-style:italic;font-family:'Fraunces',serif;}
+  .datebox{font-size:13px;color:var(--ink-soft);text-align:right;line-height:1.5;}
+
+  .flavours{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+  .flavour-tab{
+    font-family:'Fraunces',serif;font-weight:600;font-size:14px;
+    padding:9px 16px;border:2px solid var(--ink);background:var(--paper);
+    color:var(--ink);border-radius:3px;cursor:pointer;transition:all .15s ease;
+  }
+  .flavour-tab:hover{background:#F0E6D2;}
+  .flavour-tab.active{background:var(--ink);color:var(--cream);}
+  .flavour-tab .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+
+  .panel{
+    background:var(--paper);border:1px solid var(--rule);border-radius:6px;
+    padding:24px;margin-bottom:20px;box-shadow:var(--shadow);
+  }
+  .panel h2{font-family:'Fraunces',serif;font-size:18px;margin:0 0 16px;display:flex;align-items:center;gap:8px;}
+  .eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-deep);font-weight:700;margin-bottom:4px;display:block;}
+
+  .row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  .field{flex:1;min-width:150px;}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field .sub{font-size:11px;color:#9C8A72;font-weight:400;display:block;margin-top:2px;}
+  input[type=number]{
+    width:100%;padding:10px 12px;border:1.5px solid var(--rule);border-radius:5px;
+    font-family:'Inter',sans-serif;font-size:15px;font-weight:600;color:var(--ink);background:#fff;
+  }
+  input[type=number]:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold);}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+
+  .divider-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#9C8A72;
+    font-weight:700;margin:18px 0 10px;padding-top:14px;border-top:1px dashed var(--rule);
+  }
+  .divider-label:first-child{margin-top:0;padding-top:0;border-top:none;}
+
+  .breakdown{margin-top:8px;}
+  .bd-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:7px 0;font-size:14px;border-bottom:1px solid var(--rule);
+  }
+  .bd-row:last-child{border-bottom:none;}
+  .bd-row .label{color:var(--ink-soft);}
+  .bd-row .value{font-weight:700;font-family:'Inter',sans-serif;}
+  .bd-row.subtotal{border-top:2px solid var(--ink);border-bottom:none;margin-top:4px;padding-top:10px;}
+  .bd-row.subtotal .label, .bd-row.subtotal .value{font-weight:700;color:var(--ink);}
+
+  .channels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .channel-card{
+    background:#fff;border:1.5px solid var(--rule);border-radius:7px;padding:18px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .channel-card.featured{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+  .channel-card h3{font-family:'Fraunces',serif;font-size:15px;margin:0;display:flex;justify-content:space-between;align-items:center;}
+  .channel-card .ch-margin{font-size:11px;color:var(--gold-deep);font-weight:700;background:#F0E6D2;padding:2px 8px;border-radius:10px;}
+  .channel-card .ch-price{font-family:'Fraunces',serif;font-size:26px;font-weight:700;margin:2px 0;}
+  .channel-card .ch-detail{font-size:12px;color:var(--ink-soft);line-height:1.5;}
+  .channel-card .ch-profit{font-size:12.5px;font-weight:600;}
+  .channel-card .ch-profit.pos{color:var(--profit);}
+  .channel-card .ch-profit.neg{color:var(--cost);}
+
+  /* Comparison table across flavours */
+  table.compare{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px;}
+  table.compare th{
+    text-align:left;font-family:'Fraunces',serif;font-weight:600;font-size:13px;
+    padding:8px 10px;border-bottom:2px solid var(--ink);color:var(--ink-soft);
+  }
+  table.compare td{padding:9px 10px;border-bottom:1px solid var(--rule);}
+  table.compare tr.active-row{background:#F0E6D2;}
+  table.compare td.num{font-weight:700;font-family:'Inter',sans-serif;}
+  table.compare td.swatch-cell{display:flex;align-items:center;gap:8px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .guide-list{display:flex;flex-direction:column;gap:14px;}
+  .guide-item{display:flex;gap:14px;}
+  .guide-num{font-family:'Fraunces',serif;font-weight:700;font-size:20px;color:var(--gold-deep);flex-shrink:0;width:28px;}
+  .guide-item p{margin:0;font-size:14px;line-height:1.55;color:var(--ink-soft);}
+  .guide-item strong{color:var(--ink);}
+
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ledger-head">
+    <div>
+      <h1>Popkhana Ledger</h1>
+      <div class="tag">flavoured makhana, vendor to channel, in £</div>
+    </div>
+    <div class="datebox" id="todayDate"></div>
+  </div>
+
+  <div class="flavours" id="flavourTabs"></div>
+
+  <!-- INPUTS -->
+  <div class="panel">
+    <span class="eyebrow">Build your cost, per pack — editing: <span id="activeFlavourLabel"></span></span>
+    <h2>Pack &amp; Cost Details</h2>
+
+    <div class="divider-label">Pack size</div>
+    <div class="row">
+      <div class="field">
+        <label for="netWeight">Net weight per pack<span class="sub">grams</span></label>
+        <input type="number" id="netWeight" min="1" value="100">
+      </div>
+      <div class="field">
+        <label for="packsPerBatch">Packs in this batch<span class="sub">used to spread inbound transport</span></label>
+        <input type="number" id="packsPerBatch" min="1" value="100">
+      </div>
+    </div>
+
+    <div class="divider-label">What the vendor charges you (already flavoured)</div>
+    <div class="row">
+      <div class="field">
+        <label for="vendorPricePerKg">Flavoured makhana price<span class="sub">£ per kg, from vendor — includes their seasoning cost</span></label>
+        <input type="number" id="vendorPricePerKg" min="0" step="0.01" value="9.20">
+      </div>
+    </div>
+
+    <div class="divider-label">Your packaging</div>
+    <div class="row">
+      <div class="field">
+        <label for="packagingCost">Pouch, label &amp; seal<span class="sub">£ per pack</span></label>
+        <input type="number" id="packagingCost" min="0" step="0.01" value="0.22">
+      </div>
+    </div>
+
+    <div class="divider-label">Getting it to you and out the door</div>
+    <div class="row">
+      <div class="field">
+        <label for="inboundTransport">Inbound transport<span class="sub">£ total, vendor → you, this batch</span></label>
+        <input type="number" id="inboundTransport" min="0" step="0.01" value="20">
+      </div>
+      <div class="field">
+        <label for="outboundTransport">Outbound transport<span class="sub">£ per pack, you → channel/customer</span></label>
+        <input type="number" id="outboundTransport" min="0" step="0.01" value="2.20">
+      </div>
+    </div>
+
+    <div class="breakdown" id="costBreakdown"></div>
+  </div>
+
+  <!-- CHANNEL PRICING -->
+  <div class="panel">
+    <span class="eyebrow">Set your margin per channel — applies to all flavours</span>
+    <h2>Selling Channels</h2>
+    <div class="row">
+      <div class="field">
+        <label for="marginDirect">Direct / e-commerce margin %<span class="sub">you keep this in full</span></label>
+        <input type="number" id="marginDirect" min="0" max="95" value="55">
+      </div>
+      <div class="field">
+        <label for="marginRetail">Retail wholesale margin %<span class="sub">your margin before retailer markup</span></label>
+        <input type="number" id="marginRetail" min="0" max="95" value="30">
+      </div>
+      <div class="field">
+        <label for="retailerMarkup">Retailer's own markup %<span class="sub">what shops add on top of your price</span></label>
+        <input type="number" id="retailerMarkup" min="0" max="200" value="40">
+      </div>
+    </div>
+    <div class="channels" id="channelCards"></div>
+  </div>
+
+  <!-- ALL FLAVOURS COMPARISON -->
+  <div class="panel">
+    <span class="eyebrow">At a glance</span>
+    <h2>All Flavours — Recommended Prices</h2>
+    <p class="hint" style="margin-bottom:10px;">Uses the vendor price per kg entered for each flavour below — adjust and the table updates instantly. Packaging, transport, and margins are shared across all flavours from the settings above.</p>
+    <table class="compare">
+      <thead>
+        <tr><th>Flavour</th><th>Vendor £/kg</th><th>Landed cost/pack</th><th>E-commerce price</th><th>Wholesale price</th><th>Shelf price</th></tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </div>
+
+  <!-- GUIDE -->
+  <div class="panel">
+    <span class="eyebrow">New to pricing a flavoured snack range?</span>
+    <h2>How to read this calculator</h2>
+    <div class="guide-list">
+      <div class="guide-item">
+        <div class="guide-num">01</div>
+        <p><strong>Your vendor price already includes their flavouring cost.</strong> Since they sell you finished, flavoured makhana, your own costs are simply packaging and transport — there's no separate seasoning or roasting step on your side to account for.</p>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">02</div>
+        <p><strong>Different flavours can have very different vendor prices.</strong> Chocolate or cheese-coated makhana usually costs more per kg than a simple roasted version, because the vendor's own ingredient and process costs are higher. The comparison table lets you set a different £/kg for each flavour.</p>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">03</div>
+        <p><strong>Net weight drives your makhana cost directly.</strong> A 100g pack needs exactly 0.1kg of flavoured makhana at the vendor's £/kg rate — if you ever change pack size, this cost scales proportionally, so re-check your channel prices whenever net weight changes.</p>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">04</div>
+        <p><strong>E-commerce and retail still need separate prices.</strong> Your e-commerce price is what the customer pays you directly. Your wholesale price is what you invoice a retailer — lower, because they add their own markup. Check the shelf price stays sensible for a snack before locking in your wholesale rate.</p>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">05</div>
+        <p><strong>Re-check pricing whenever your vendor changes a flavour's price.</strong> A vendor might raise the price on one flavour (say, if cheese or chocolate ingredient costs rise) without changing others — update only that flavour's £/kg rather than assuming all four move together.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const flavours = [
+    { name:"South Indian", color:"#8C5A2B", vendorPrice: 8.60 },
+    { name:"Tomato", color:"#C1432A", vendorPrice: 8.20 },
+    { name:"Onion & Cream", color:"#D9B98C", vendorPrice: 9.00 },
+    { name:"Salt & Pepper", color:"#A89C8A", vendorPrice: 7.90 },
+    { name:"Mint", color:"#6F9A6E", vendorPrice: 8.40 },
+    { name:"Cheese", color:"#E0B23C", vendorPrice: 9.60 }
+  ];
+  let activeFlavour = 0;
+
+  function renderFlavours(){
+    const wrap = document.getElementById('flavourTabs');
+    wrap.innerHTML = '';
+    flavours.forEach((f,i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'flavour-tab' + (i===activeFlavour ? ' active' : '');
+      btn.innerHTML = `<span class="swatch" style="background:${f.color}"></span>${f.name}`;
+      btn.onclick = ()=>{
+        activeFlavour=i;
+        document.getElementById('vendorPricePerKg').value = flavours[i].vendorPrice;
+        renderFlavours();
+        calculate();
+      };
+      wrap.appendChild(btn);
+    });
+    document.getElementById('activeFlavourLabel').textContent = flavours[activeFlavour].name;
+  }
+
+  document.getElementById('todayDate').innerHTML =
+    new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) +
+    '<br>Cost &amp; price worksheet';
+
+  function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
+  const fmt = n => '£' + n.toFixed(2);
+
+  function landedCostPerPack(vendorPricePerKg, netWeight, packagingCost, inboundTransport, packsPerBatch){
+    const kgNeededPerPack = netWeight/1000;
+    const makhanaCost = kgNeededPerPack * vendorPricePerKg;
+    const inboundPerPack = inboundTransport / Math.max(packsPerBatch,1);
+    return {
+      makhanaCost,
+      inboundPerPack,
+      total: makhanaCost + packagingCost + inboundPerPack
+    };
+  }
+
+  function calculate(){
+    flavours[activeFlavour].vendorPrice = val('vendorPricePerKg'); // keep in sync as user edits
+
+    const netWeight = val('netWeight');
+    const packsPerBatch = Math.max(val('packsPerBatch'),1);
+    const vendorPricePerKg = val('vendorPricePerKg');
+    const packagingCost = val('packagingCost');
+    const inboundTransport = val('inboundTransport');
+    const outboundTransport = val('outboundTransport');
+
+    const lc = landedCostPerPack(vendorPricePerKg, netWeight, packagingCost, inboundTransport, packsPerBatch);
+    const totalWithOutbound = lc.total + outboundTransport;
+
+    document.getElementById('costBreakdown').innerHTML = `
+      <div class="bd-row"><span class="label">Flavoured makhana (${netWeight}g per pack)</span><span class="value">${fmt(lc.makhanaCost)}</span></div>
+      <div class="bd-row"><span class="label">Packaging (pouch, label, seal)</span><span class="value">${fmt(packagingCost)}</span></div>
+      <div class="bd-row"><span class="label">Inbound transport (spread over ${packsPerBatch} packs)</span><span class="value">${fmt(lc.inboundPerPack)}</span></div>
+      <div class="bd-row subtotal"><span class="label">Cost before outbound delivery</span><span class="value">${fmt(lc.total)}</span></div>
+      <div class="bd-row"><span class="label">Outbound transport (per pack)</span><span class="value">${fmt(outboundTransport)}</span></div>
+      <div class="bd-row subtotal"><span class="label">Total landed cost per pack (${netWeight}g)</span><span class="value">${fmt(totalWithOutbound)}</span></div>
+    `;
+
+    renderChannels(lc.total, outboundTransport, netWeight);
+    renderCompareTable(netWeight, packsPerBatch, packagingCost, inboundTransport, outboundTransport);
+  }
+
+  function renderChannels(costBeforeOutbound, outboundTransport, netWeight){
+    const marginDirect = val('marginDirect');
+    const marginRetail = val('marginRetail');
+    const retailerMarkup = val('retailerMarkup');
+
+    const ecomCost = costBeforeOutbound + outboundTransport;
+    const ecomPrice = marginDirect < 100 ? ecomCost / (1 - marginDirect/100) : ecomCost;
+    const ecomProfit = ecomPrice - ecomCost;
+
+    const retailOutbound = outboundTransport * 0.4;
+    const retailCost = costBeforeOutbound + retailOutbound;
+    const wholesalePrice = marginRetail < 100 ? retailCost / (1 - marginRetail/100) : retailCost;
+    const wholesaleProfit = wholesalePrice - retailCost;
+    const shelfPrice = wholesalePrice * (1 + retailerMarkup/100);
+
+    const perGram = (price) => '£' + (price/netWeight*100).toFixed(2) + ' / 100g';
+
+    document.getElementById('channelCards').innerHTML = `
+      <div class="channel-card featured">
+        <h3>E-commerce / Direct <span class="ch-margin">${marginDirect}% margin</span></h3>
+        <div class="ch-price">${fmt(ecomPrice)}</div>
+        <div class="ch-detail">Your landed cost incl. delivery: ${fmt(ecomCost)}<br>${perGram(ecomPrice)}</div>
+        <div class="ch-profit ${ecomProfit>=0?'pos':'neg'}">${ecomProfit>=0?'Profit':'Loss'} per pack: ${fmt(Math.abs(ecomProfit))}</div>
+      </div>
+      <div class="channel-card">
+        <h3>Retail wholesale <span class="ch-margin">${marginRetail}% margin</span></h3>
+        <div class="ch-price">${fmt(wholesalePrice)}</div>
+        <div class="ch-detail">What you invoice the retailer<br>Your cost incl. bulk delivery: ${fmt(retailCost)}</div>
+        <div class="ch-profit ${wholesaleProfit>=0?'pos':'neg'}">${wholesaleProfit>=0?'Profit':'Loss'} per pack: ${fmt(Math.abs(wholesaleProfit))}</div>
+      </div>
+      <div class="channel-card">
+        <h3>Retail shelf price <span class="ch-margin">+${retailerMarkup}% by shop</span></h3>
+        <div class="ch-price">${fmt(shelfPrice)}</div>
+        <div class="ch-detail">What the end customer pays in-store<br>${perGram(shelfPrice)}</div>
+        <div class="ch-profit pos">This margin belongs to the retailer</div>
+      </div>
+    `;
+  }
+
+  function renderCompareTable(netWeight, packsPerBatch, packagingCost, inboundTransport, outboundTransport){
+    const marginDirect = val('marginDirect');
+    const marginRetail = val('marginRetail');
+    const retailerMarkup = val('retailerMarkup');
+
+    const rows = flavours.map((f,i)=>{
+      const lc = landedCostPerPack(f.vendorPrice, netWeight, packagingCost, inboundTransport, packsPerBatch);
+      const ecomCost = lc.total + outboundTransport;
+      const ecomPrice = marginDirect < 100 ? ecomCost / (1 - marginDirect/100) : ecomCost;
+
+      const retailOutbound = outboundTransport * 0.4;
+      const retailCost = lc.total + retailOutbound;
+      const wholesalePrice = marginRetail < 100 ? retailCost / (1 - marginRetail/100) : retailCost;
+      const shelfPrice = wholesalePrice * (1 + retailerMarkup/100);
+
+      return `
+        <tr class="${i===activeFlavour?'active-row':''}">
+          <td class="swatch-cell"><span class="dot" style="background:${f.color}"></span>${f.name}</td>
+          <td class="num">${fmt(f.vendorPrice)}</td>
+          <td class="num">${fmt(ecomCost)}</td>
+          <td class="num">${fmt(ecomPrice)}</td>
+          <td class="num">${fmt(wholesalePrice)}</td>
+          <td class="num">${fmt(shelfPrice)}</td>
+        </tr>
+      `;
+    }).join('');
+    document.getElementById('compareBody').innerHTML = rows;
+  }
+
+  document.querySelectorAll('input[type=number]').forEach(el=>{
+    el.addEventListener('input', calculate);
+  });
+
+  document.getElementById('vendorPricePerKg').value = flavours[activeFlavour].vendorPrice;
+  renderFlavours();
+  calculate();
+</script>
+</body>
+</html>
